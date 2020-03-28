@@ -9,7 +9,19 @@ import java.util.*
 
 class AddVariableDeclaration : Transformation() {
     override fun transform() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val text = file.text.lines().toMutableList()
+        for (i in 0..Random().nextInt(shuffleConst)) {
+            val insLine = Random().nextInt(text.size)
+            val generateExpr = "null"
+            text.add(insLine, generateExpr) //проверить
+            if (!checker.checkTextCompiling(getText(text))) {
+                text.removeAt(insLine) //проверить
+            }
+        }
+        file = psiFactory.createFile(getText(text))
     }
 
+    private fun getText(text: MutableList<String>) = text.joinToString(separator = "\n")
+
+    private val shuffleConst = file.text.lines().size * 4
 }
