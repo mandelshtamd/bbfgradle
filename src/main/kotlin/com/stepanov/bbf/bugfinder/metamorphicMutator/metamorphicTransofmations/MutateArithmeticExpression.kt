@@ -34,7 +34,7 @@ class MutateArithmeticExpression : Transformation() {
 
     private fun breakdownIntoTerms(source: Int) : String {
         val leftOp = Random.nextInt() % 100000
-        val rightOp = 0
+        var rightOp = 0
         if (source - leftOp < Int.MIN_VALUE) { 
             rightOp = source + leftOp 
             return "(-$leftOp + $rightOp)"
