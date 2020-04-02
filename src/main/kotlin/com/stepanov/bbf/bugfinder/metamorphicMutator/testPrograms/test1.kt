@@ -1,4 +1,4 @@
-package com.stepanov.bbf.bugfinder.metamorphicMutator.tests
+package com.stepanov.bbf.bugfinder.metamorphicMutator.testPrograms
 
 fun main(args: Array<String>) {
     val a = (60 and 0.inv()) + ((40 shl 1) shr 1)

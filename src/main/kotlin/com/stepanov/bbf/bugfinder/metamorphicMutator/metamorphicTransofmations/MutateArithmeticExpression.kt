@@ -3,26 +3,24 @@ package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 import com.intellij.lang.ASTNode
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.util.getAllChildrenNodes
-import com.stepanov.bbf.bugfinder.util.getRandomBoolean
 import org.jetbrains.kotlin.KtNodeTypes
-import org.jetbrains.kotlin.fir.lightTree.converter.generateDestructuringBlock
-import org.jetbrains.kotlin.psi.psiUtil.parents
 import kotlin.random.Random
 
-class AddArithmeticExpression : Transformation() {
+class MutateArithmeticExpression : Transformation() {
+    val mutationsCount = 6
+
     override fun transform() {
         val operators = file.node.getAllChildrenNodes()
             .filter { it.elementType == KtNodeTypes.INTEGER_CONSTANT }
         operators.forEach {
-            /* генерирую два операнда, заменяю */
-            val newArithmExpr = transformArithmeticExpr(it.text.toInt())
-            replaceArithmExpr(it, newArithmExpr, false)
+            val mutatedArithmExpr = doMutation(it.text.toInt())
+            replaceArithmExpr(it, mutatedArithmExpr)
         }
     }
 
-    private fun transformArithmeticExpr(source : Int): String {
+    private fun doMutation(source : Int): String {
         var newArithmExpr = "$source"
-        when (Random.nextInt() % 6) {
+        when (Random.nextInt() % mutationsCount) {
             0 -> newArithmExpr = breakdownIntoTerms(source)
             1 -> newArithmExpr = "($source or ($source % 2))"
             2 -> newArithmExpr = "($source and 0.inv())"
@@ -30,21 +28,19 @@ class AddArithmeticExpression : Transformation() {
             4 -> newArithmExpr = "($source shl 0)"
             5 -> newArithmExpr = "($source + ($source.inv() and $source))"
         }
+        //TODO: make more mutations -- use xor, % and /.
         return newArithmExpr
     }
 
     private fun breakdownIntoTerms(source: Int) : String {
+        //Что делать, если source - minInt?
         val leftOp = Random.nextInt() % 100000
         val rightOp = source - leftOp
         return "($leftOp + $rightOp)"
     }
 
-    private fun replaceArithmExpr(replace: ASTNode, replacement: String, isRandom: Boolean = true) {
-        if (isRandom && getRandomBoolean() || !isRandom) {
-            val replacementNode =
-                psiFactory.createArgument(replacement)
-
-            checker.replacePSINodeIfPossible(file, replace.psi, replacementNode)
-        }
+    private fun replaceArithmExpr(replace: ASTNode, replacement: String) {
+        val replacementNode = psiFactory.createArgument(replacement)
+        checker.replacePSINodeIfPossible(file, replace.psi, replacementNode)
     }
 }
