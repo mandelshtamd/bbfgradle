@@ -33,10 +33,15 @@ class MutateArithmeticExpression : Transformation() {
     }
 
     private fun breakdownIntoTerms(source: Int) : String {
-        //Что делать, если source - minInt?
         val leftOp = Random.nextInt() % 100000
-        val rightOp = source - leftOp
-        return "($leftOp + $rightOp)"
+        val rightOp = 0
+        if (source - leftOp < Int.MIN_VALUE) { 
+            rightOp = source + leftOp 
+            return "(-$leftOp + $rightOp)"
+        } else { 
+            rightOp = source - leftOp 
+            return "($leftOp + $rightOp)"
+        }
     }
 
     private fun replaceArithmExpr(replace: ASTNode, replacement: String) {
