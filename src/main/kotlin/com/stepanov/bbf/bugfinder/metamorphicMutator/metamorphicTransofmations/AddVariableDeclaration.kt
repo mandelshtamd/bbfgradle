@@ -1,10 +1,8 @@
-package com.stepanov.bbf.bugfinder.deadCodeMutator.equivalenceTransformations
+package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
-import org.jetbrains.kotlin.psi.*
-
-import com.stepanov.bbf.bugfinder.util.getAllPSIChildrenOfType
 import com.stepanov.bbf.bugfinder.util.getRandomVariableName
+
 import java.util.*
 
 class AddVariableDeclaration : Transformation() {
@@ -12,7 +10,8 @@ class AddVariableDeclaration : Transformation() {
         val text = file.text.lines().toMutableList()
         for (i in 0..Random().nextInt(shuffleConst)) {
             val insLine = Random().nextInt(text.size)
-            val generateExpr = "null"
+
+            val generateExpr = generateDeclaration()
             text.add(insLine, generateExpr) //проверить
             if (!checker.checkTextCompiling(getText(text))) {
                 text.removeAt(insLine) //проверить
@@ -21,7 +20,13 @@ class AddVariableDeclaration : Transformation() {
         file = psiFactory.createFile(getText(text))
     }
 
+    fun generateDeclaration() : String {
+        val variableName = Random().getRandomVariableName(10)
+        val randValue = Random().nextInt()
+        return "\tvar $variableName = $randValue"
+    }
+
     private fun getText(text: MutableList<String>) = text.joinToString(separator = "\n")
 
-    private val shuffleConst = file.text.lines().size * 4
+    private val shuffleConst = file.text.lines().size / 2
 }
