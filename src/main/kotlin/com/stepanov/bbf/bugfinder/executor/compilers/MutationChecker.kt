@@ -14,6 +14,8 @@ import org.jetbrains.kotlin.psi.KtFile
 class MutationChecker(compilers: List<CommonCompiler>, var otherFiles: Project? = null) :
     CompilationChecker(compilers) {
 
+    constructor(compiler: CommonCompiler, otherFiles: Project? = null) : this(listOf(compiler), otherFiles)
+
     fun replacePSINodeIfPossible(file: PsiFile, node: PsiElement, replacement: PsiElement) =
         replaceNodeIfPossible(file, node.node, replacement.node)
 
@@ -49,25 +51,27 @@ class MutationChecker(compilers: List<CommonCompiler>, var otherFiles: Project? 
         addNodeIfPossible(file as PsiFile, anchor, node, before)
 
     fun addNodeIfPossible(file: PsiFile, anchor: PsiElement, node: PsiElement, before: Boolean = false): Boolean {
+        if (node.text.isEmpty() || node == anchor) return checkCompiling(file, otherFiles)
+        return addNodeIfPossibleWithNode(file, anchor, node, before) != null
+    }
+
+    fun addNodeIfPossibleWithNode(file: PsiFile, anchor: PsiElement, node: PsiElement, before: Boolean = false): PsiElement? {
         log.debug("Trying to add $node to $anchor")
-        if (node.text.isEmpty() || node == anchor) return checkCompiling(
-            file,
-            otherFiles
-        )
+        if (node.text.isEmpty() || node == anchor) return null
         try {
             val addedNode =
                 if (before) anchor.parent.addBefore(node, anchor)
                 else anchor.parent.addAfter(node, anchor)
             if (checkCompiling(file, otherFiles)) {
                 log.debug("Result = true\nText:\n${file.text}")
-                return true
+                return addedNode
             }
             log.debug("Result = false\nText:\n${file.text}")
             addedNode.parent.node.removeChild(addedNode.node)
-            return false
+            return null
         } catch (e: Throwable) {
             println("e = $e")
-            return false
+            return null
         }
     }
 

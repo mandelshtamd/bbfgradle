@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
+import com.stepanov.bbf.bugfinder.util.getAllDFSChildren
 import com.stepanov.bbf.reduktor.executor.CompilerTestChecker
 import org.jetbrains.kotlin.KtNodeTypes
 import org.jetbrains.kotlin.psi.*
@@ -99,6 +100,18 @@ fun ASTNode.getAllParentsWithoutNode(): ArrayList<ASTNode> {
         node = node.treeParent
     }
     return result
+}
+
+fun PsiElement.getAllParentsWithoutThis(): List<PsiElement> {
+    val result = arrayListOf<ASTNode>()
+    var node = this.node.treeParent ?: return arrayListOf<PsiElement>()
+    while (true) {
+        result.add(node)
+        if (node.treeParent == null)
+            break
+        node = node.treeParent
+    }
+    return result.map { it.psi }
 }
 
 
@@ -255,6 +268,8 @@ inline fun <reified T : PsiElement> PsiElement.getAllPSIChildrenOfType(): List<T
         this.node.getAllChildrenNodes().filter { it.psi is T }.map { it.psi as T }
 
 fun PsiElement.getAllChildren(): List<PsiElement> = this.node.getAllChildrenNodes().map { it.psi }
+
+fun PsiElement.getAllDFSChildren(): List<PsiElement> = this.node.getAllDFSChildren().map { it.psi }
 
 fun ASTNode.isEqual(other: ASTNode): Boolean {
     if (other.elementType != this.elementType) return false
