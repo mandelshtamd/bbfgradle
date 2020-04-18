@@ -8,10 +8,10 @@ import com.stepanov.bbf.bugfinder.util.saveOrRemoveToTmp
 class RuntimeVariableValuesCollector(private val tree: PsiFile, private val compiler: CommonCompiler) {
 
     data class IntOrRange(val intVal: Int?, val rangeValue: IntRange?) {
-        override fun toString(): String = intVal?.let { "$intVal" } ?: "$rangeValue"
+        override fun toString(): String = intVal?.let { "$intVal" } ?: "${rangeValue?.first}"
     }
 
-    fun collect(): Map<String, List<IntOrRange>> {
+    fun collect(): Map<String, List<Int>> {
         val path = Project(addMainIfNeed(tree.text)).saveOrRemoveToTmp(true)
         val pathToCompiled = compiler.compile(path)
         if (pathToCompiled.status == -1) return mapOf()
@@ -47,7 +47,7 @@ class RuntimeVariableValuesCollector(private val tree: PsiFile, private val comp
     }
 
 
-    private fun makeRanges(list: MutableList<Int>): List<IntOrRange> {
+    private fun makeRanges(list: MutableList<Int>): List<Int> {
         val res = mutableListOf<IntRange>()
         res.add(list[0]..list[0])
         for (i in 1 until list.size) {
@@ -57,7 +57,7 @@ class RuntimeVariableValuesCollector(private val tree: PsiFile, private val comp
                 res.add(list[i]..list[i])
             }
         }
-        return res.map { if (it.first == it.last) IntOrRange(it.first, null) else IntOrRange(null, it) }
+        return res.map { if (it.first == it.last) it.first else it.first }
     }
 
     private fun <T> MutableList<T>.setLast(value: T) {

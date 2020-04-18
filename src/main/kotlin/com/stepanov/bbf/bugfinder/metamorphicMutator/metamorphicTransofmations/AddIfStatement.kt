@@ -2,6 +2,7 @@ package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.util.getRandomVariableName
+import java.lang.StringBuilder
 import java.util.*
 
 class AddIfStatement : Transformation() {
@@ -30,7 +31,6 @@ class AddIfStatement : Transformation() {
     fun generateVarDeclaration() : String {
         val numOfPossibleTypes = 5
         val variableName = Random().getRandomVariableName(7)
-
         val randValue = when (Random().nextInt(numOfPossibleTypes)) {
             0 -> Random().nextInt()
             1 -> Random().nextBoolean()

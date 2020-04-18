@@ -14,10 +14,10 @@ import org.jetbrains.kotlin.resolve.BindingContext
 
 class VariableValuesTracer(private var tree: PsiFile, private val ctx: BindingContext, val checker: MutationChecker) {
 
-    fun trace() {
+    fun trace(nodeUntil: PsiElement) {
         val propParams = tree.getAllPSIChildrenOfType<KtParameter>().filter { it.isPropertyParameter() }
         val properties = (tree.getAllPSIChildrenOfType<KtProperty>() + propParams)
-            .filter { it.name != null && it.getType(ctx)?.toString()?.contains("Int") ?: false }
+                .filter { it.name != null && it.getType(ctx)?.toString()?.contains("Int") ?: false }
         val propsWithPref = properties.map { prop ->
             var prefix = generatePrefix(prop)
             if (prefix.isEmpty()) prefix = "globalVar"
@@ -25,39 +25,41 @@ class VariableValuesTracer(private var tree: PsiFile, private val ctx: BindingCo
         }
         val propToPrint = properties.mapIndexed { ind, prop -> prop to createPrint(propsWithPref[ind], prop.name!!) }
         for (node in tree.getAllDFSChildren()) {
+            if (node == nodeUntil)
+                break
             if (node is PsiWhiteSpace && node.text.contains("\n") && node.parent !is PsiFile) {
                 var bearingNode = node
                 //println("parent = ${node.parent.text}")
                 val sliced = getSlice(node)
                 //println("sliced = ${sliced.map { it.text }}")
                 propToPrint
-                    .filter {
-                        it.first in sliced
-                            || it.second.text.contains("globalVar.")
-                            || (it.first is KtParameter && generatePrefix(node).contains(generatePrefix(it.first)))
-                    }
-                    .forEach {
-                        println("adding ${it.second.text}")
-                        val copy = it.second.copy() as KtBlockExpression
-                        val res = checker.addNodeIfPossibleWithNode(tree, bearingNode, copy)
+                        .filter {
+                            it.first in sliced
+                                    || it.second.text.contains("globalVar.")
+                                    || (it.first is KtParameter && generatePrefix(node).contains(generatePrefix(it.first)))
+                        }
+                        .forEach {
+                            println("adding ${it.second.text}")
+                            val copy = it.second.copy() as KtBlockExpression
+                            val res = checker.addNodeIfPossibleWithNode(tree, bearingNode, copy)
 //                        println(res != null)
 //                        println("\n\n")
-                        if (res != null) bearingNode = res
-                    }
+                            if (res != null) bearingNode = res
+                        }
             }
         }
     }
 
     private fun generatePrefix(prop: PsiElement) =
-        prop.getAllParentsWithoutThis().reversed()
-            .filter { it is KtClassOrObject || it is KtNamedFunction }
-            .joinToString(".") {
-                when (it) {
-                    is KtNamedFunction -> "FUN_${it.name}"
-                    is KtClassOrObject -> "CLASS_${it.name}"
-                    else -> ""
-                }
-            }
+            prop.getAllParentsWithoutThis().reversed()
+                    .filter { it is KtClassOrObject || it is KtNamedFunction }
+                    .joinToString(".") {
+                        when (it) {
+                            is KtNamedFunction -> "FUN_${it.name}"
+                            is KtClassOrObject -> "CLASS_${it.name}"
+                            else -> ""
+                        }
+                    }
 
 
     private fun createPrint(nameWithPref: String, name: String): PsiElement {
@@ -81,12 +83,10 @@ class VariableValuesTracer(private var tree: PsiFile, private val ctx: BindingCo
     }
 
     private fun getPropsUntil(node: PsiElement, until: PsiElement) =
-        node.getAllChildren()
-            .takeWhile { it != until }
-            .filter { it is KtProperty || it.isPropParam }
+            node.getAllChildren()
+                    .takeWhile { it != until }
+                    .filter { it is KtProperty || it.isPropParam }
 
 
     private val project = tree.project
-
-
 }
