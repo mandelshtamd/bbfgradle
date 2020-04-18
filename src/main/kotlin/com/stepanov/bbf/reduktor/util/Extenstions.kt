@@ -336,5 +336,11 @@ fun PsiElement.checkAndReplaceBackIfError(checker: CompilerTestChecker, file: Kt
     return true
 }
 
+fun Iterable<PsiElement>.filterElementsWithSameTexts(): List<PsiElement> {
+    val res = mutableListOf<PsiElement>()
+    this.forEach { el -> if (res.all { el.text.trim() != it.text.trim() }) res.add(el) }
+    return res
+}
+
 fun <T, K> Map<T, Pair<K, K>>.getPairFirstOrDefault(a: T, default: K): K = this[a]?.first ?: default
 fun <T, K> Map<T, Pair<K, K>>.getPairSecondOrDefault(a: T, default: K): K = this[a]?.second ?: default
