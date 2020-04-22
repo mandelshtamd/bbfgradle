@@ -1,29 +1,24 @@
 package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
-import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
-import com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations.EquivalentMutation
-import java.lang.Math.abs
 import kotlin.random.Random
 
 class SynthesizePredicate {
-    fun SynPred(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
-        if (depth == 0) {
-            return SynAtom(env, expected)
-        }
+    fun synPredicate(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
+        if (depth == 0) return synAtomic(env, expected)
 
         return when(Random.nextInt(4)) {
-            0 -> SynNeg(env, expected, depth)
-            1 -> SynCon(env, expected, depth)
-            2 -> SynDis(env, expected, depth)
-            else -> SynAtom(env, expected)
+            0 -> synNegativePredicate(env, expected, depth)
+            1 -> synConjunction(env, expected, depth)
+            2 -> synDisjunction(env, expected, depth)
+            else -> synAtomic(env, expected)
         }
     }
 
-    fun SynNeg(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
-        return "!(${SynPred(env, !expected, depth - 1)})"
+    fun synNegativePredicate(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
+        return "!(${synPredicate(env, !expected, depth - 1)})"
     }
 
-    fun SynCon(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
+    fun synConjunction(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
         val right : Boolean
         val left : Boolean
 
@@ -37,14 +32,15 @@ class SynthesizePredicate {
             left = false
             right = Random.nextBoolean()
         }
-        val left_pred = SynPred(env, left, depth - 1)
-        val right_pred = SynPred(env, right, depth - 1)
-        return Expr("&&", left_pred, right_pred)
+
+        val leftPred = synPredicate(env, left, depth - 1)
+        val rightPred = synPredicate(env, right, depth - 1)
+        return composeExpression("&&", leftPred, rightPred)
     }
 
-     fun SynDis(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
-         val left : Boolean
-         val right : Boolean
+     fun synDisjunction(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
+         var left : Boolean
+         var right : Boolean
 
          if (!expected) {
              left = false
@@ -57,28 +53,28 @@ class SynthesizePredicate {
              right = Random.nextBoolean()
          }
 
-         val left_pred = SynPred(env, left, depth - 1)
-         val right_pred = SynPred(env, left, depth - 1)
-         return Expr("||", left_pred, right_pred)
+         val leftPred = synPredicate(env, left, depth - 1)
+         val rightPred = synPredicate(env, left, depth - 1)
+         return composeExpression("||", leftPred, rightPred)
      }
 
-    fun Expr(operation : String, left_pred : String, right_pred : String) : String{
-        return "($left_pred) $operation ($right_pred)"
+    fun composeExpression(operation : String, leftPred : String, rightPred : String) : String{
+        if (leftPred == "")
+            return "($operation$rightPred)"
+        return "($leftPred) $operation ($rightPred)"
     }
 
-     fun SynAtom(env : Map<String, List<Int>>, expected : Boolean) : String {
-         val listOfVars = EquivalentMutation.VarEnvironment().getListOfGlobalVars()
-         val mapOfVarsAndValues = EquivalentMutation.VarEnvironment().getMapOfVarsAndValues()
-         val firstRandomVar = listOfVars[Random.nextInt(listOfVars.size)]
-         val secondRandomVar = listOfVars[Random.nextInt(listOfVars.size)]
+     fun synAtomic(env : Map<String, List<Int>>, expected : Boolean) : String {
+         val firstRandomVar = env.keys.random()
+         val secondRandomVar = env.keys.random()
 
-         val fv = firstRandomVar.substringAfter('.')
-         val sv = secondRandomVar.substringAfter('.')
+         val firstVarName = firstRandomVar.substringAfter('.')
+         val secondVarName = secondRandomVar.substringAfter('.')
 
-         when(Random.nextInt(2)) {
-             1 -> return generateExprWithVarAndConstant(fv, mapOfVarsAndValues[firstRandomVar]!!.last(), expected)
-             else -> return generateExprWithTwoVars(fv, mapOfVarsAndValues[firstRandomVar]!!.last(),
-                                                        sv, mapOfVarsAndValues[firstRandomVar]!!.last(), expected)
+         return when(Random.nextInt(2)) {
+             0 -> generateExprWithVarAndConstant(firstVarName, env[firstRandomVar]!!.last(), expected)
+             else -> generateExprWithTwoVars(firstVarName, env[firstRandomVar]!!.last(),
+                     secondVarName, env[firstRandomVar]!!.last(), expected)
          }
      }
 

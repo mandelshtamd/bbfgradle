@@ -13,27 +13,24 @@ import org.jetbrains.kotlin.psi.KtFunction
 import java.io.File
 
 abstract class EquivalentMutation : Transformation() {
-    open class VarEnvironment {
-        fun VarEnvironment() {
-        }
+    protected fun getText(text: MutableList<String>) = text.joinToString(separator = "\n")
 
-        fun getListOfGlobalVars() : List<String>  {
-            VariableValuesTracer(psi, creator.ctx!!, checker).trace(6)
-            val res = RuntimeVariableValuesCollector(psi, compiler).collect()
-            return res.keys.toList()
-        }
+    companion object {
+        fun getVarEnv(beginLine : Int, endLine : Int) : MutableMap<String, List<Int>> {
+            val creator = PSICreator("")
+            val compiler = JVMCompiler()
+            val psi = creator.getPSIForText(file.text)
+            val checker = MutationChecker(compiler)
+            VariableValuesTracer(psi, creator.ctx!!, checker).trace(beginLine)
 
-        fun getMapOfVarsAndValues() : Map<String, List<Int>> {
-            VariableValuesTracer(psi, creator.ctx!!, checker).trace(6)
-            val res = RuntimeVariableValuesCollector(psi, compiler).collect()
+            val res = RuntimeVariableValuesCollector(psi, compiler).collect().toMutableMap()
+
+            for (line in beginLine+1 .. endLine) {
+                VariableValuesTracer(psi, creator.ctx!!, checker).trace(line)
+                val lineResult = RuntimeVariableValuesCollector(psi, compiler).collect()
+                res.putAll(lineResult)
+            }
             return res
         }
-
-
-        val creator = PSICreator("")
-        val compiler = JVMCompiler()
-        val psi = creator.getPSIForText(file.text)
-        val checker = MutationChecker(compiler)
     }
-
 }

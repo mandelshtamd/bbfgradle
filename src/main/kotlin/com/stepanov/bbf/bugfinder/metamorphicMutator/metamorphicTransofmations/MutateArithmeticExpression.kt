@@ -28,7 +28,6 @@ class MutateArithmeticExpression : Transformation() {
             4 -> newArithmExpr = "($source shl 0)"
             5 -> newArithmExpr = "($source + ($source.inv() and $source))"
         }
-        //TODO: make more mutations -- use xor, % and /.
         return newArithmExpr
     }
 

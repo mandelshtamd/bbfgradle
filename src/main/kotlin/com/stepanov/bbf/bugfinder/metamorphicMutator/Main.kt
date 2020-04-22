@@ -22,9 +22,8 @@ import java.lang.StringBuilder
 import java.util.*
 
 
-fun main(args: Array<String>) {
+fun main() {
     val pathToTestProgram = "src/main/kotlin/com/stepanov/bbf/bugfinder/metamorphicMutator/seedPrograms/seed1.kt"
-
 
     Factory.file = PSICreator("").getPSIForFile(pathToTestProgram)
     val psiCreator = PSICreator("")
@@ -39,10 +38,14 @@ fun main(args: Array<String>) {
             }
         }
 
-
-    Transformation.checker = MutationChecker(compilers)
+    checker = MutationChecker(compilers)
     MetamorphicMutator(psiFile, psiCreator.ctx!!).startMutate()
 
+    saveResult()
+}
+
+
+fun saveResult() {
     val resultingMutant = PSICreator("").getPSIForText(Transformation.file.text)
     val pathToMutatedProgram = "src/main/kotlin/com/stepanov/bbf/bugfinder/metamorphicMutator/mutatedPrograms"
     val pathToSave = "$pathToMutatedProgram/${Random().getRandomVariableName(5)}.kt"
