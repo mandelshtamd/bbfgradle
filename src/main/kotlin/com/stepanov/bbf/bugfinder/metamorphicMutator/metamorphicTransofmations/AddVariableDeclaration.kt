@@ -1,26 +1,28 @@
 package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
-import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
-import com.stepanov.bbf.bugfinder.util.getRandomVariableName
+import com.stepanov.bbf.bugfinder.util.*
+import com.stepanov.bbf.reduktor.util.getAllChildren
+import com.stepanov.bbf.reduktor.util.getAllPSIChildrenOfType
+import org.jetbrains.kotlin.KtNodeType
+import org.jetbrains.kotlin.KtNodeTypes
+import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.stubs.elements.KtObjectElementType
 import java.util.*
+import kotlin.random.Random.Default.nextInt
 
 
-class AddVariableDeclaration : Transformation() {
+class AddVariableDeclaration : EquivalentMutation() {
     override fun transform() {
-        val text = file.text.lines().toMutableList()
-        val maxNumOfIns = file.text.lines().size / 2
+        val lines = file.getAllChildren()
+        val maxNumOfIns = lines.size / 2
 
         repeat(Random().nextInt(maxNumOfIns)) {
-            val insLine = Random().nextInt(text.size)
+            val insIdentifier = Random().nextInt(maxNumOfIns)
             val generateExpr = generateVarDeclaration()
 
-            text.add(insLine, generateExpr)
-            if (!checker.checkTextCompiling(getText(text))) {
-                text.removeAt(insLine)
-            }
+            val extraNode = psiFactory.createProperty(generateExpr)
+            checker.addNodeIfPossible(file, lines[insIdentifier], extraNode, Random().nextBoolean())
         }
-
-        file = psiFactory.createFile(getText(text))
     }
 
     fun generateVarDeclaration() : String {
@@ -35,8 +37,6 @@ class AddVariableDeclaration : Transformation() {
             4 -> Random().nextFloat()
             else -> 0
         }
-        return "\tvar $variableName = $randValue"
+        return "val $variableName = $randValue"
     }
-
-    private fun getText(text: MutableList<String>) = text.joinToString(separator = "\n")
 }

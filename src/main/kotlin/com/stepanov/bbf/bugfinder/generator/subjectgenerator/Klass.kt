@@ -8,7 +8,7 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 import java.lang.StringBuilder
 import java.util.*
 
-abstract class Klass() : Expression() {
+abstract class Klass : Expression() {
 
     fun generate(): PsiElement {
         //Mb type with bound

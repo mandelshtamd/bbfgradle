@@ -1,4 +1,4 @@
-package com.stepanov.bbf.bugfinder.metamorphicMutator.testPrograms
+package com.stepanov.bbf.bugfinder.metamorphicMutator.seedPrograms
 
 import java.lang.StringBuilder
 

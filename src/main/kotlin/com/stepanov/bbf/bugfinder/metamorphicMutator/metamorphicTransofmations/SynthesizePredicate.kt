@@ -2,6 +2,7 @@ package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
 import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
 import com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations.EquivalentMutation
+import java.lang.Math.abs
 import kotlin.random.Random
 
 class SynthesizePredicate {
@@ -10,17 +11,16 @@ class SynthesizePredicate {
             return SynAtom(env, expected)
         }
 
-        when(Random.nextInt(4)) {
-            0 -> return SynNeg(env, expected, depth)
-            1 -> return SynCon(env, expected, depth)
-            2 -> return SynDis(env, expected, depth)
-            3 -> return SynAtom(env, expected)
+        return when(Random.nextInt(4)) {
+            0 -> SynNeg(env, expected, depth)
+            1 -> SynCon(env, expected, depth)
+            2 -> SynDis(env, expected, depth)
+            else -> SynAtom(env, expected)
         }
-        return ""
     }
 
     fun SynNeg(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
-        return "!${SynPred(env, !expected, depth - 1)}"
+        return "!(${SynPred(env, !expected, depth - 1)})"
     }
 
     fun SynCon(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
@@ -76,25 +76,30 @@ class SynthesizePredicate {
          val sv = secondRandomVar.substringAfter('.')
 
          when(Random.nextInt(2)) {
-             1 -> return generateExprWithVarAndConstant(fv, mapOfVarsAndValues[firstRandomVar]!!.last())
+             1 -> return generateExprWithVarAndConstant(fv, mapOfVarsAndValues[firstRandomVar]!!.last(), expected)
              else -> return generateExprWithTwoVars(fv, mapOfVarsAndValues[firstRandomVar]!!.last(),
-                                                        sv, mapOfVarsAndValues[firstRandomVar]!!.last())
+                                                        sv, mapOfVarsAndValues[firstRandomVar]!!.last(), expected)
          }
      }
 
-    fun generateExprWithVarAndConstant(variable : String, varArg : Int) : String {
-        when(Random.nextInt(4)) {
-            1 -> return "$variable <= ${varArg + Random.nextInt(Int.MAX_VALUE - varArg)}"
-            2 -> return "$variable < ${varArg + 1 + Random.nextInt(Int.MAX_VALUE - varArg)}"
-            3 -> return "$variable >= ${varArg + Random.nextInt(Int.MIN_VALUE - varArg)}"
-            else -> return "$variable > ${varArg  - 1 + Random.nextInt(Int.MAX_VALUE - varArg)}"
+    fun generateExprWithVarAndConstant(variable : String, varArg : Int, expected: Boolean) : String {
+        val expr = when(Random.nextInt(2)) {
+            0 -> "($variable <= ${varArg + Random.nextInt(Int.MAX_VALUE - varArg)})"
+            else -> "($variable < ${varArg + 1 + Random.nextInt(Int.MAX_VALUE - varArg - 1)})"
+        }
+
+        return when(expected){
+            false -> "(!$expr)"
+            else -> expr
         }
     }
 
-    fun generateExprWithTwoVars(firstVar : String, firstVarArg : Int, secondVar : String, secondVarArg : Int) : String {
-        if (firstVarArg > secondVarArg)
-            return "($firstVar > $secondVar)"
-        else
-            return "($firstVar <= $secondVar)"
+    fun generateExprWithTwoVars(firstVar : String, firstVarArg : Int, secondVar : String, secondVarArg : Int, expected: Boolean) : String {
+        return when(expected) {
+            true && firstVarArg > secondVarArg -> "($firstVar > $secondVar)"
+            true && firstVarArg <= secondVarArg -> "($firstVar <= $secondVar)"
+            false && firstVarArg > secondVarArg -> "($firstVar <= $secondVar)"
+            else -> "($firstVar > $secondVar)"
+        }
     }
 }

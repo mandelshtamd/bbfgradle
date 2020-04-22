@@ -18,14 +18,13 @@ abstract class EquivalentMutation : Transformation() {
         }
 
         fun getListOfGlobalVars() : List<String>  {
-            VariableValuesTracer(psi, creator.ctx!!, checker).trace(psi.lastChild)
+            VariableValuesTracer(psi, creator.ctx!!, checker).trace(6)
             val res = RuntimeVariableValuesCollector(psi, compiler).collect()
-            val global_vars = res.filter { (key) -> key.startsWith("globalVar") }
             return res.keys.toList()
         }
 
         fun getMapOfVarsAndValues() : Map<String, List<Int>> {
-            VariableValuesTracer(psi, creator.ctx!!, checker).trace(psi.lastChild)
+            VariableValuesTracer(psi, creator.ctx!!, checker).trace(6)
             val res = RuntimeVariableValuesCollector(psi, compiler).collect()
             return res
         }
