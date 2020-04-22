@@ -6,9 +6,11 @@ import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
 import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.tracer.VariableValuesTracer
+import com.stepanov.bbf.bugfinder.util.getAllChildrenOfCurLevel
 import com.stepanov.bbf.bugfinder.util.getAllPSIDFSChildrenOfType
 import com.stepanov.bbf.reduktor.parser.PSICreator
 import org.jetbrains.kotlin.psi.KtIfExpression
+import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespaceAndComments
 import java.util.*
 import kotlin.random.Random.Default.nextInt
 
@@ -21,10 +23,14 @@ class AddAlwaysTrueGuard : EquivalentMutation() {
         repeat(Random().nextInt(maxNumIterations)) {
             val changeLineNum = Random().nextInt(text.size - 1)
 
+
             val trueGuardBlock = trueGuardBlock(text[changeLineNum], changeLineNum)
-            val extraNode = psiFactory.createExpression(trueGuardBlock) as KtIfExpression
+            val newBlockFragment = psiFactory.createBlock(trueGuardBlock)
+            newBlockFragment.lBrace?.delete()
+            newBlockFragment.rBrace?.delete()
+
             val anchor = nodes[changeLineNum]
-            checker.addNodeIfPossible(file, anchor, extraNode)
+            checker.addNodeIfPossible(file, anchor, newBlockFragment)
         }
     }
 

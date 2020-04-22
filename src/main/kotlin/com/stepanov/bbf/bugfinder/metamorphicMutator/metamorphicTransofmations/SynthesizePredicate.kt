@@ -65,6 +65,9 @@ class SynthesizePredicate {
     }
 
      fun synAtomic(env : Map<String, List<Int>>, expected : Boolean) : String {
+         if (env.isEmpty())
+             return ""
+
          val firstRandomVar = env.keys.random()
          val secondRandomVar = env.keys.random()
 
