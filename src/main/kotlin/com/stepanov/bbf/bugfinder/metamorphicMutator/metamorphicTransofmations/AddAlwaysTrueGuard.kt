@@ -25,9 +25,13 @@ class AddAlwaysTrueGuard : EquivalentMutation() {
         val nodes = file.getAllPSIDFSChildrenOfType<PsiWhiteSpace>().filter { it.text.contains("\n") }
         val maxNumIterations = file.text.lines().size / 3
 
-        repeat(Random().nextInt(maxNumIterations)) {
+        for (i in 1..Random().nextInt(maxNumIterations)) {
             val changeLineNum = Random().nextInt(text.size - 1)
             val code = text[changeLineNum].trim(' ')
+
+            if (code.contains("var "))
+                continue
+
             val trueGuardBlock = trueGuardBlock(code, changeLineNum)
             val newBlockFragment = psiFactory.createBlock(trueGuardBlock)
             newBlockFragment.lBrace?.delete()
@@ -41,7 +45,6 @@ class AddAlwaysTrueGuard : EquivalentMutation() {
             if (checker.addNodeIfPossible(file, anchor, newBlockFragment)) {
                 val nodeToDelete = file.getAllChildren().filter { it.text.equals(code) }.firstOrNull()
                 if (nodeToDelete != null) nodeToDelete.delete()
-                //TODO: сначала удалять, затем добавлять обратно в случае ошибки
             }
         }
     }

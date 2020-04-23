@@ -19,14 +19,14 @@ class MutateArithmeticExpression : Transformation() {
     }
 
     private fun doMutation(source: Int): String {
-        var newArithmExpr = "$source"
+        var newArithmExpr = ""
         newArithmExpr = when (Random.nextInt() % mutationsCount) {
             0 -> breakdownIntoTerms(source)
-            1 -> "($source or ($source % 2))"
-            2 -> "($source and 0.inv())"
-            3 -> "(($source shl 1) shr 1)"
-            4 -> "($source shl 0)"
-            5 -> "($source + ($source.inv() and $source))"
+//            1 -> "($source or ($source % 2))"
+//            2 -> "($source and 0.inv())"
+//            3 -> "(($source shl 1) shr 1)"
+//            4 -> "($source shl 0)"
+//            5 -> "($source + ($source.inv() and $source))"
             else -> generatePrevaluatedExpression(source, Random.nextInt(source))
         }
         return newArithmExpr
@@ -81,7 +81,7 @@ class MutateArithmeticExpression : Transformation() {
             }
         }
 
-        return "($currentNumber $operation ${generatePrevaluatedExpression(nextValue, termsCount - 1)})";
+        return "($currentNumber $operation ${generatePrevaluatedExpression(nextValue, termsCount - 1)})"
     }
 
 

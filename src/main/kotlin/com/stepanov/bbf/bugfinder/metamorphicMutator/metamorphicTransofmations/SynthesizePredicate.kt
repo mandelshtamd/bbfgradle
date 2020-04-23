@@ -39,8 +39,8 @@ class SynthesizePredicate {
     }
 
      fun synDisjunction(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
-         var left : Boolean
-         var right : Boolean
+         var left = true
+         var right = true
 
          if (!expected) {
              left = false
@@ -66,7 +66,7 @@ class SynthesizePredicate {
 
      fun synAtomic(env : Map<String, List<Int>>, expected : Boolean) : String {
          if (env.isEmpty())
-             return ""
+             return expected.toString()
 
          val firstRandomVar = env.keys.random()
          val secondRandomVar = env.keys.random()

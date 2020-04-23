@@ -15,7 +15,7 @@ class AddAlwaysFalseConditionalBlock : EquivalentMutation() {
         val nodes = file.getAllPSIDFSChildrenOfType<PsiWhiteSpace>().filter { it.text.contains("\n") }
         val maxNum = file.text.lines().size
 
-        repeat(Random().nextInt(maxNum)) {
+        repeat(5) {
             val changeLineNum = Random().nextInt(maxNum - 1)
 
             val falseConditionalBlock = falseConditionalBlock(changeLineNum)
@@ -29,20 +29,20 @@ class AddAlwaysFalseConditionalBlock : EquivalentMutation() {
             if (changeLineNum == 0) {
                 return
             }
-
+            println(falseConditionalBlock)
             checker.addNodeIfPossible(file, anchor, newBlockFragment)
         }
     }
 
     fun falseConditionalBlock(line : Int) : String {
         val env = getVarEnv(1, line)
+        val variables = SynthesizeValidExpression().toSample(env.keys, env.size)
 
         if (env.size < 1) {
             return ""
         }
 
-        val modifiedVar = SynthesizeValidExpression().toSample(env.keys, 1)?.first()
-
+        val modifiedVar = variables!!.random()
         val exprKeyWord = when(Random().nextInt(2)) {
             0 -> "if"
             else -> "while"

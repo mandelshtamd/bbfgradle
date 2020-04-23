@@ -28,10 +28,6 @@ fun main() {
     Factory.file = PSICreator("").getPSIForFile(pathToTestProgram)
     val psiCreator = PSICreator("")
     val psiFile = psiCreator.getPSIForFile(pathToTestProgram)
-//    val temp =psiFile.getAllDFSChildren()
-//    for(i in temp) {
-//        println("$i ${i.text}")
-//    }
 
     val backends = BBFProperties.getStringGroupWithoutQuotes("BACKEND_FOR_REDUCE").entries
     val compilers = backends.map { back ->
