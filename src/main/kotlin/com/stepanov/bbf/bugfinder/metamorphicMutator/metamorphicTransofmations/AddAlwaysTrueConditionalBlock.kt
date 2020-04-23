@@ -16,7 +16,7 @@ class AddAlwaysTrueConditionalBlock : EquivalentMutation() {
         val nodes = file.getAllPSIDFSChildrenOfType<PsiWhiteSpace>().filter { it.text.contains("\n") }
         val maxNum = file.text.lines().size
 
-        repeat(Random().nextInt(maxNum)) {
+        repeat(5) {
             val changeLineNum = Random().nextInt(maxNum - 1)
 
             val trueConditionalBlock = trueConditionalBlock(changeLineNum)
@@ -59,7 +59,6 @@ class AddAlwaysTrueConditionalBlock : EquivalentMutation() {
             }
         }
         $changedVar = backup_$changedVar"""
-        println(result)
 
         return result
     }

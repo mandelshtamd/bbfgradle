@@ -29,7 +29,6 @@ class AddAlwaysFalseConditionalBlock : EquivalentMutation() {
             if (changeLineNum == 0) {
                 return
             }
-            println(falseConditionalBlock)
             checker.addNodeIfPossible(file, anchor, newBlockFragment)
         }
     }

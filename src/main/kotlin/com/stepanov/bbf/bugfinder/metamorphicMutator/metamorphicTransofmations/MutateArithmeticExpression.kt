@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.util.getAllChildrenNodes
 import org.jetbrains.kotlin.KtNodeTypes
+import kotlin.math.abs
 import kotlin.random.Random
 
 class MutateArithmeticExpression : Transformation() {
@@ -27,7 +28,7 @@ class MutateArithmeticExpression : Transformation() {
 //            3 -> "(($source shl 1) shr 1)"
 //            4 -> "($source shl 0)"
 //            5 -> "($source + ($source.inv() and $source))"
-            else -> generatePrevaluatedExpression(source, Random.nextInt(source))
+            else -> generatePrevaluatedExpression(source, Random.nextInt(5))
         }
         return newArithmExpr
     }
@@ -50,6 +51,9 @@ class MutateArithmeticExpression : Transformation() {
     }
 
     private fun generatePrevaluatedExpression(number : Int, termsCount : Int) : String {
+        if (number == 0)
+            return 0.toString()
+
         var currentNumber = number
         var nextValue = 0
         var operation = ""
@@ -70,7 +74,7 @@ class MutateArithmeticExpression : Transformation() {
                 operation = "-"
             }
             2 -> {
-                nextValue = Random.nextInt(1, number)
+                nextValue = 1 + Random.nextInt(1000000)
                 currentNumber = number * nextValue
                 operation = "/"
             }
