@@ -1,16 +1,21 @@
 package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
 import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.tracer.VariableValuesTracer
-import com.stepanov.bbf.bugfinder.util.getAllChildrenOfCurLevel
-import com.stepanov.bbf.bugfinder.util.getAllPSIDFSChildrenOfType
+import com.stepanov.bbf.bugfinder.util.*
 import com.stepanov.bbf.reduktor.parser.PSICreator
+import com.stepanov.bbf.reduktor.util.getAllChildren
+import com.stepanov.bbf.reduktor.util.getAllParentsWithoutThis
+import org.jetbrains.kotlin.BlockExpressionElementType
+import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtIfExpression
-import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespaceAndComments
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.*
 import java.util.*
 import kotlin.random.Random.Default.nextInt
 
@@ -22,15 +27,22 @@ class AddAlwaysTrueGuard : EquivalentMutation() {
 
         repeat(Random().nextInt(maxNumIterations)) {
             val changeLineNum = Random().nextInt(text.size - 1)
-
-
-            val trueGuardBlock = trueGuardBlock(text[changeLineNum], changeLineNum)
+            val code = text[changeLineNum].trim(' ')
+            val trueGuardBlock = trueGuardBlock(code, changeLineNum)
             val newBlockFragment = psiFactory.createBlock(trueGuardBlock)
             newBlockFragment.lBrace?.delete()
             newBlockFragment.rBrace?.delete()
 
             val anchor = nodes[changeLineNum]
-            checker.addNodeIfPossible(file, anchor, newBlockFragment)
+            if (changeLineNum == 0) {
+                return
+            }
+
+            if (checker.addNodeIfPossible(file, anchor, newBlockFragment)) {
+                val nodeToDelete = file.getAllChildren().filter { it.text.equals(code) }.firstOrNull()
+                if (nodeToDelete != null) nodeToDelete.delete()
+                //TODO: сначала удалять, затем добавлять обратно в случае ошибки
+            }
         }
     }
 

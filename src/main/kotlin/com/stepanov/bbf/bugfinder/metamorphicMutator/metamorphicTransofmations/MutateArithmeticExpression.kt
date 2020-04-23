@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.KtNodeTypes
 import kotlin.random.Random
 
 class MutateArithmeticExpression : Transformation() {
-    val mutationsCount = 6
+    val mutationsCount = 7
 
     override fun transform() {
         val operators = file.node.getAllChildrenNodes()
@@ -18,15 +18,16 @@ class MutateArithmeticExpression : Transformation() {
         }
     }
 
-    private fun doMutation(source : Int): String {
+    private fun doMutation(source: Int): String {
         var newArithmExpr = "$source"
-        when (Random.nextInt() % mutationsCount) {
-            0 -> newArithmExpr = breakdownIntoTerms(source)
-            1 -> newArithmExpr = "($source or ($source % 2))"
-            2 -> newArithmExpr = "($source and 0.inv())"
-            3 -> newArithmExpr = "(($source shl 1) shr 1)"
-            4 -> newArithmExpr = "($source shl 0)"
-            5 -> newArithmExpr = "($source + ($source.inv() and $source))"
+        newArithmExpr = when (Random.nextInt() % mutationsCount) {
+            0 -> breakdownIntoTerms(source)
+            1 -> "($source or ($source % 2))"
+            2 -> "($source and 0.inv())"
+            3 -> "(($source shl 1) shr 1)"
+            4 -> "($source shl 0)"
+            5 -> "($source + ($source.inv() and $source))"
+            else -> generatePrevaluatedExpression(source, Random.nextInt(source))
         }
         return newArithmExpr
     }
@@ -46,5 +47,49 @@ class MutateArithmeticExpression : Transformation() {
     private fun replaceArithmExpr(replace: ASTNode, replacement: String) {
         val replacementNode = psiFactory.createArgument(replacement)
         checker.replacePSINodeIfPossible(file, replace.psi, replacementNode)
+    }
+
+    private fun generatePrevaluatedExpression(number : Int, termsCount : Int) : String {
+        var currentNumber = number
+        var nextValue = 0
+        var operation = ""
+        val denominators = getDenominators(number)
+
+        if (termsCount == 0)
+            return number.toString()
+
+        when(Random.nextInt(4)) {
+            0 -> {
+                nextValue = Random.nextInt(number)
+                currentNumber -= nextValue
+                operation = "+"
+            }
+            1 -> {
+                nextValue = Random.nextInt(number)
+                currentNumber += nextValue
+                operation = "-"
+            }
+            2 -> {
+                nextValue = Random.nextInt(1, number)
+                currentNumber = number * nextValue
+                operation = "/"
+            }
+            3 -> {
+                nextValue = denominators[Random.nextInt(denominators.size)]
+                currentNumber = number / nextValue
+                operation = "*"
+            }
+        }
+
+        return "($currentNumber $operation ${generatePrevaluatedExpression(nextValue, termsCount - 1)})";
+    }
+
+
+    fun getDenominators(num: Int): MutableList<Int> {
+        val result = mutableListOf(1)
+        for (i in 2..Math.sqrt(num.toDouble()).toInt()) {
+            if (num % i == 0) result.add(i)
+        }
+        return result
     }
 }

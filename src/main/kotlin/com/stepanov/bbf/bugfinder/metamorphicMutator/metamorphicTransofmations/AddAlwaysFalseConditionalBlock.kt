@@ -1,46 +1,47 @@
 package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
+import com.intellij.psi.PsiWhiteSpace
 import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
 import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.tracer.VariableValuesTracer
+import com.stepanov.bbf.bugfinder.util.getAllPSIDFSChildrenOfType
 import com.stepanov.bbf.reduktor.parser.PSICreator
 import java.util.*
 
 class AddAlwaysFalseConditionalBlock : EquivalentMutation() {
     override fun transform() {
-        val text = file.text.lines().toMutableList()
-        val maxNum = file.text.lines().size / 2
-        println("yes")
+        val nodes = file.getAllPSIDFSChildrenOfType<PsiWhiteSpace>().filter { it.text.contains("\n") }
+        val maxNum = file.text.lines().size
+
         repeat(Random().nextInt(maxNum)) {
-            val changeLine = Random().nextInt(file.text.lines().size)
+            val changeLineNum = Random().nextInt(maxNum - 1)
 
-            val falseConditionalBlock = falseConditionalBlock(changeLine)
-            println(falseConditionalBlock)
+            val falseConditionalBlock = falseConditionalBlock(changeLineNum)
 
-            if (falseConditionalBlock.isEmpty())
+            val newBlockFragment = psiFactory.createBlock(falseConditionalBlock)
+            newBlockFragment.lBrace?.delete()
+            newBlockFragment.rBrace?.delete()
+
+            val anchor = nodes[changeLineNum]
+
+            if (changeLineNum == 0) {
                 return
-
-            text.addAll(changeLine, falseConditionalBlock)
-
-            if (!checker.checkTextCompiling(getText(text))) {
-                for (i in 1..falseConditionalBlock.size)
-                    text.removeAt(changeLine)
             }
-        }
 
-        file = psiFactory.createFile(getText(text))
+            checker.addNodeIfPossible(file, anchor, newBlockFragment)
+        }
     }
 
-    fun falseConditionalBlock(line : Int) : List<String> {
+    fun falseConditionalBlock(line : Int) : String {
         val env = getVarEnv(1, line)
 
         if (env.size < 1) {
-            return emptyList()
+            return ""
         }
 
-        val modifiedVar = SynthesizeValidExpression().toSample(env.keys, 1).first()
+        val modifiedVar = SynthesizeValidExpression().toSample(env.keys, 1)?.first()
 
         val exprKeyWord = when(Random().nextInt(2)) {
             0 -> "if"
@@ -51,7 +52,7 @@ class AddAlwaysFalseConditionalBlock : EquivalentMutation() {
         """$exprKeyWord (${SynthesizePredicate().synPredicate(env, false, 2)}) {
             ${modifiedVar} = ${SynthesizeValidExpression().synExpression(env)}
             println($modifiedVar)
-        }""".split('\n')
+        }"""
 
         return result
     }

@@ -15,6 +15,7 @@ import com.stepanov.bbf.bugfinder.util.getFirstParentOfType
 import com.stepanov.bbf.bugfinder.util.getRandomVariableName
 import com.stepanov.bbf.reduktor.parser.PSICreator
 import com.stepanov.bbf.reduktor.util.getAllChildren
+import com.stepanov.bbf.reduktor.util.getAllDFSChildren
 import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtFunction
 import java.io.File
@@ -24,10 +25,13 @@ import java.util.*
 
 fun main() {
     val pathToTestProgram = "src/main/kotlin/com/stepanov/bbf/bugfinder/metamorphicMutator/seedPrograms/seed1.kt"
-
     Factory.file = PSICreator("").getPSIForFile(pathToTestProgram)
     val psiCreator = PSICreator("")
     val psiFile = psiCreator.getPSIForFile(pathToTestProgram)
+//    val temp =psiFile.getAllDFSChildren()
+//    for(i in temp) {
+//        println("$i ${i.text}")
+//    }
 
     val backends = BBFProperties.getStringGroupWithoutQuotes("BACKEND_FOR_REDUCE").entries
     val compilers = backends.map { back ->

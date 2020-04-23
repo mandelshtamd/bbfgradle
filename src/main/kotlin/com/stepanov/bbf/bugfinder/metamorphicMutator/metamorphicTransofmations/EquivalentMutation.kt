@@ -25,11 +25,12 @@ abstract class EquivalentMutation : Transformation() {
 
             val res = RuntimeVariableValuesCollector(psi, compiler).collect().toMutableMap()
 
-            for (line in beginLine+1 .. endLine) {
+            for (line in beginLine + 1 .. endLine) {
                 VariableValuesTracer(psi, creator.ctx!!, checker).trace(line)
                 val lineResult = RuntimeVariableValuesCollector(psi, compiler).collect()
                 res.putAll(lineResult)
             }
+
             return res
         }
     }

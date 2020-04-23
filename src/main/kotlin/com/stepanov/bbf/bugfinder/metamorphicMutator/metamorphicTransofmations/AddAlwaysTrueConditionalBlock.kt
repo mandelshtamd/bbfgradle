@@ -1,44 +1,49 @@
 package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
+import com.intellij.psi.PsiWhiteSpace
 import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
 import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.tracer.VariableValuesTracer
+import com.stepanov.bbf.bugfinder.util.getAllPSIDFSChildrenOfType
 import com.stepanov.bbf.reduktor.parser.PSICreator
+import com.stepanov.bbf.reduktor.util.getAllChildren
 import java.util.*
 
 class AddAlwaysTrueConditionalBlock : EquivalentMutation() {
     override fun transform() {
-        val text = file.text.lines().toMutableList()
-        val maxNum = file.text.lines().size / 2
+        val nodes = file.getAllPSIDFSChildrenOfType<PsiWhiteSpace>().filter { it.text.contains("\n") }
+        val maxNum = file.text.lines().size
 
         repeat(Random().nextInt(maxNum)) {
-            val changeLine = Random().nextInt(file.text.lines().size)
+            val changeLineNum = Random().nextInt(maxNum - 1)
 
-            val trueConditionalBlock = trueConditionalBlock(changeLine)
-            if (trueConditionalBlock.isEmpty())
+            val trueConditionalBlock = trueConditionalBlock(changeLineNum)
+
+            val newBlockFragment = psiFactory.createBlock(trueConditionalBlock)
+            newBlockFragment.lBrace?.delete()
+            newBlockFragment.rBrace?.delete()
+
+            val anchor = nodes[changeLineNum]
+
+            if (changeLineNum == 0) {
                 return
-
-            text.addAll(changeLine, trueConditionalBlock)
-
-            if (!checker.checkTextCompiling(getText(text))) {
-                for (i in 1..trueConditionalBlock.size)
-                    text.removeAt(changeLine)
             }
-        }
 
-        file = psiFactory.createFile(getText(text))
+            checker.addNodeIfPossible(file, anchor, newBlockFragment)
+        }
     }
 
-    fun trueConditionalBlock(line : Int) : List<String> {
+    fun trueConditionalBlock(line : Int) : String {
         val env = getVarEnv(1, line)
+        val variables = SynthesizeValidExpression().toSample(env.keys, env.size)
 
         if (env.size < 1) {
-            return emptyList()
+            return ""
         }
 
-        val changedVar = SynthesizeValidExpression().toSample(env.keys, 1).first()
+        val changedVar = variables!!.random()
 
         val exprKeyWord = when(Random().nextInt(2)) {
             0 -> "if"
@@ -53,7 +58,8 @@ class AddAlwaysTrueConditionalBlock : EquivalentMutation() {
                 println($changedVar)
             }
         }
-        $changedVar = backup_$changedVar""".split('\n')
+        $changedVar = backup_$changedVar"""
+        println(result)
 
         return result
     }
