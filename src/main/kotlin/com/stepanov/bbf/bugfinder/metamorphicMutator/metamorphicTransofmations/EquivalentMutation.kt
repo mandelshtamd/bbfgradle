@@ -20,12 +20,12 @@ abstract class EquivalentMutation : Transformation() {
     protected fun getText(text: MutableList<String>) = text.joinToString(separator = "\n")
 
     fun getNthWhiteSpace(line : Int) : PsiElement? {
-        var curLine = 0
+        var currentLine = 0
         var prev: PsiWhiteSpace? = null
         for (node in file.getAllDFSChildren()) {
             if (node is PsiWhiteSpace) {
-                curLine += node.text.count { it == '\n' }
-                if (curLine < line && node.text.contains("\n")) prev = node
+                currentLine += node.text.count { it == '\n' }
+                if (currentLine != line && node.text.contains("\n")) prev = node
             }
         }
         return prev

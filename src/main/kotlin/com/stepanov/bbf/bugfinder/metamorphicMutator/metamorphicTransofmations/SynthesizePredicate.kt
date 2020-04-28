@@ -6,7 +6,7 @@ class SynthesizePredicate {
     fun synPredicate(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
         if (depth == 0) return synAtomic(env, expected)
 
-        return when(Random.nextInt(4)) {
+        return when(Random.nextInt(3)) {
             0 -> synNegativePredicate(env, expected, depth)
             1 -> synConjunction(env, expected, depth)
             2 -> synDisjunction(env, expected, depth)

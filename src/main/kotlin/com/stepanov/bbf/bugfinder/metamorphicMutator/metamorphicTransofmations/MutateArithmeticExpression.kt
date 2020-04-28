@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.util.getAllChildrenNodes
 import org.jetbrains.kotlin.KtNodeTypes
+import ru.spbstu.wheels.asBits
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -67,9 +68,59 @@ class MutateArithmeticExpression : Transformation() {
                 currentNumber = number / nextValue
                 operation = "*"
             }
+            4 -> {
+                nextValue = getNextNumberOrOperation(number) ?: number
+                currentNumber = number or nextValue
+                operation = "or"
+            }
+            5 -> {
+                nextValue = getNextNumberAndOperation(number) ?: number
+                currentNumber = number and nextValue
+                operation = "and"
+            }
         }
-
         return "($currentNumber $operation ${generatePrevaluatedExpression(nextValue, termsCount - 1)})"
+    }
+
+
+    fun getNextNumberOrOperation(number : Int) : Int? {
+        val bitArray = Integer.toBinaryString(number)
+        var nextNumber = mutableListOf<Char>()
+
+        for (i in 0 until bitArray.length) {
+            if (bitArray[i] == '1')
+                nextNumber.add(listOf<Char>('0', '1').random())
+            else
+                nextNumber.add('0')
+        }
+        println(bitArray)
+        println(nextNumber)
+        return getIntFromList(nextNumber)
+    }
+
+
+    fun getNextNumberAndOperation(number : Int) : Int? {
+        val bitArray = Integer.toBinaryString(number)
+        var nextNumber = mutableListOf<Char>()
+
+        for (i in 0 until bitArray.length) {
+            if (bitArray[i] == '1')
+                nextNumber.add(bitArray[i])
+            else
+                nextNumber.add(listOf<Char>('0', '1').random())
+        }
+        return getIntFromList(nextNumber)
+    }
+
+
+    fun getIntFromList(list : List<Char>) : Int {
+        var temp = 1
+        var result = 0
+        for (i in list.size-1 downTo  0) {
+            result += temp * (list[i] - '0')
+            temp *= 2
+        }
+        return result
     }
 
 

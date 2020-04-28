@@ -13,7 +13,7 @@ class SynthesizeValidExpression {
 
         var worklist = toSample(env, Random.nextInt(env.keys.size))
 
-        var unaryMaximumCount = 5
+        var unaryMaximumCount = 3
         var atLeastOne = false
 
         if (worklist.isNullOrEmpty()) {

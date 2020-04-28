@@ -23,8 +23,16 @@ class MetamorphicMutator(val file: PsiFile, val context: BindingContext?) {
 
     private fun startMetamorphicMutations() {
         executeMutation(MutateArithmeticExpression(),   100)
-        executeMutation(AddAlwaysTrueGuard(), 100)
+        println("arithmetic expr ended")
+        println(file.text)
+//        executeMutation(AddAlwaysTrueGuard(), 100)
+//        println("atg ended")
+//        println(file.text)
         executeMutation(AddAlwaysTrueConditionalBlock(), 100)
+        println("atc ended")
+        println(file.text)
         executeMutation(AddAlwaysFalseConditionalBlock(), 100)
+        println("fcb ended")
+        println(file.text)
     }
 }

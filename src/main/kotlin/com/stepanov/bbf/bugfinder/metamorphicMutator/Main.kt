@@ -5,6 +5,7 @@ import com.stepanov.bbf.bugfinder.executor.compilers.JSCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
 import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
+import com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations.MutateArithmeticExpression
 import com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations.SynthesizePredicate
 import com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations.SynthesizeValidExpression
 import com.stepanov.bbf.bugfinder.mutator.transformations.Factory
@@ -27,7 +28,7 @@ import javax.naming.spi.DirectoryManager
 
 
 fun main() {
-    val pathToTestDirectory = "src/main/kotlin/com/stepanov/bbf/bugfinder/metamorphicMutator/seedPrograms"
+    val pathToTestDirectory = "tmp/arrays"
     File(pathToTestDirectory).walk().forEach {
         if (!it.isFile)
             return@forEach
@@ -35,10 +36,9 @@ fun main() {
         val testFile = it.name
         val pathToTestProgram = it.absolutePath
 
-        print(testFile)
+        println(testFile)
 
         Factory.file = PSICreator("").getPSIForFile(pathToTestProgram)
-
         val psiCreator = PSICreator("")
         val psiFile = psiCreator.getPSIForFile(pathToTestProgram)
 

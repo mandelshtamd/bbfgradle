@@ -27,7 +27,7 @@ class AddAlwaysFalseConditionalBlock : EquivalentMutation() {
             val newBlockFragment = psiFactory.createBlock(falseConditionalBlock)
             newBlockFragment.lBrace?.delete()
             newBlockFragment.rBrace?.delete()
-            println(changeLineNum)
+
             val anchor = getNthWhiteSpace(changeLineNum)
             if (anchor == null) continue
 
