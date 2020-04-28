@@ -22,9 +22,9 @@ class MetamorphicMutator(val file: PsiFile, val context: BindingContext?) {
     }
 
     private fun startMetamorphicMutations() {
-        executeMutation(MutateArithmeticExpression(),   80)
-        executeMutation(AddAlwaysTrueGuard(), 80)
-        executeMutation(AddAlwaysTrueConditionalBlock(), 80)
-        executeMutation(AddAlwaysFalseConditionalBlock(), 80)
+        executeMutation(MutateArithmeticExpression(),   100)
+        executeMutation(AddAlwaysTrueGuard(), 100)
+        executeMutation(AddAlwaysTrueConditionalBlock(), 100)
+        executeMutation(AddAlwaysFalseConditionalBlock(), 100)
     }
 }

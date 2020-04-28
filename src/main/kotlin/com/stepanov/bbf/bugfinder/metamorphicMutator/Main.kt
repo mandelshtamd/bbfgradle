@@ -1,5 +1,6 @@
 package com.stepanov.bbf.bugfinder.metamorphicMutator
 
+import com.intellij.openapi.fileTypes.DirectoryFileType
 import com.stepanov.bbf.bugfinder.executor.compilers.JSCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
@@ -16,21 +17,33 @@ import com.stepanov.bbf.bugfinder.util.getRandomVariableName
 import com.stepanov.bbf.reduktor.parser.PSICreator
 import com.stepanov.bbf.reduktor.util.getAllChildren
 import com.stepanov.bbf.reduktor.util.getAllDFSChildren
+import org.codehaus.plexus.util.DirectoryWalker
 import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtFunction
 import java.io.File
 import java.lang.StringBuilder
 import java.util.*
+import javax.naming.spi.DirectoryManager
 
 
 fun main() {
-    val pathToTestProgram = "src/main/kotlin/com/stepanov/bbf/bugfinder/metamorphicMutator/seedPrograms/seed1.kt"
-    Factory.file = PSICreator("").getPSIForFile(pathToTestProgram)
-    val psiCreator = PSICreator("")
-    val psiFile = psiCreator.getPSIForFile(pathToTestProgram)
+    val pathToTestDirectory = "src/main/kotlin/com/stepanov/bbf/bugfinder/metamorphicMutator/seedPrograms"
+    File(pathToTestDirectory).walk().forEach {
+        if (!it.isFile)
+            return@forEach
 
-    val backends = BBFProperties.getStringGroupWithoutQuotes("BACKEND_FOR_REDUCE").entries
-    val compilers = backends.map { back ->
+        val testFile = it.name
+        val pathToTestProgram = it.absolutePath
+
+        print(testFile)
+
+        Factory.file = PSICreator("").getPSIForFile(pathToTestProgram)
+
+        val psiCreator = PSICreator("")
+        val psiFile = psiCreator.getPSIForFile(pathToTestProgram)
+
+        val backends = BBFProperties.getStringGroupWithoutQuotes("BACKEND_FOR_REDUCE").entries
+        val compilers = backends.map { back ->
             when {
                 back.key.startsWith("JVM") -> JVMCompiler(back.value)
                 back.key.startsWith("JS") -> JSCompiler(back.value)
@@ -38,10 +51,11 @@ fun main() {
             }
         }
 
-    checker = MutationChecker(compilers)
-    MetamorphicMutator(psiFile, psiCreator.ctx!!).startMutate()
+        checker = MutationChecker(compilers)
+        MetamorphicMutator(psiFile, psiCreator.ctx!!).startMutate()
 
-    saveResult()
+        saveResult()
+    }
 }
 
 

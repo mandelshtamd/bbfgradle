@@ -39,8 +39,8 @@ class SynthesizePredicate {
     }
 
      fun synDisjunction(env : Map<String, List<Int>>, expected : Boolean, depth : Int) : String {
-         var left = true
-         var right = true
+         var left : Boolean
+         var right : Boolean
 
          if (!expected) {
              left = false
@@ -54,7 +54,7 @@ class SynthesizePredicate {
          }
 
          val leftPred = synPredicate(env, left, depth - 1)
-         val rightPred = synPredicate(env, left, depth - 1)
+         val rightPred = synPredicate(env, right, depth - 1)
          return composeExpression("||", leftPred, rightPred)
      }
 
@@ -77,14 +77,14 @@ class SynthesizePredicate {
          return when(Random.nextInt(2)) {
              0 -> generateExprWithVarAndConstant(firstVarName, env[firstRandomVar]!!.last(), expected)
              else -> generateExprWithTwoVars(firstVarName, env[firstRandomVar]!!.last(),
-                     secondVarName, env[firstRandomVar]!!.last(), expected)
+                     secondVarName, env[secondRandomVar]!!.last(), expected)
          }
      }
 
     fun generateExprWithVarAndConstant(variable : String, varArg : Int, expected: Boolean) : String {
         val expr = when(Random.nextInt(2)) {
-            0 -> "($variable <= ${varArg + Random.nextInt(Int.MAX_VALUE - varArg)})"
-            else -> "($variable < ${varArg + 1 + Random.nextInt(Int.MAX_VALUE - varArg - 1)})"
+            0 -> "($variable <= ${varArg + Random.nextInt(Int.MAX_VALUE - Math.abs(varArg))})"
+            else -> "($variable < ${varArg + Random.nextInt(Int.MAX_VALUE - Math.abs(varArg))})"
         }
 
         return when(expected){
@@ -94,11 +94,10 @@ class SynthesizePredicate {
     }
 
     fun generateExprWithTwoVars(firstVar : String, firstVarArg : Int, secondVar : String, secondVarArg : Int, expected: Boolean) : String {
-        return when(expected) {
-            true && firstVarArg > secondVarArg -> "($firstVar > $secondVar)"
-            true && firstVarArg <= secondVarArg -> "($firstVar <= $secondVar)"
-            false && firstVarArg > secondVarArg -> "($firstVar <= $secondVar)"
-            else -> "($firstVar > $secondVar)"
-        }
+        if (expected && (firstVarArg > secondVarArg)) return "($firstVar > $secondVar)"
+        if (expected && (firstVarArg <= secondVarArg)) return "($firstVar <= $secondVar)"
+        if (!expected && (firstVarArg > secondVarArg)) return "($firstVar <= $secondVar)"
+
+        return "($firstVar > $secondVar)"
     }
 }
