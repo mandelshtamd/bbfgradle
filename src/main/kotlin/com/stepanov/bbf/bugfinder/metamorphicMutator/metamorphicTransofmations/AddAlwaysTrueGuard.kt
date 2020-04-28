@@ -36,26 +36,11 @@ class AddAlwaysTrueGuard : EquivalentMutation() {
             val code = text[changeLineNum]
 
             val trueGuardBlock = trueGuardBlock(code, changeLineNum)
-            val newBlockFragment = psiFactory.createBlock(trueGuardBlock)
-            newBlockFragment.lBrace?.delete()
-            newBlockFragment.rBrace?.delete()
-
-            val nodeToDelete = file.getAllChildren().filter{
-                it.text.contains(code.trim(' ')) }.lastOrNull()
-            if (nodeToDelete == null) continue
-
-            val whiteSpace = psiFactory.createWhiteSpace()
-
-            val deletedNodeText = nodeToDelete.text
-            nodeToDelete.replaceThis(whiteSpace)
-
-            if (!checker.replacePSINodeIfPossible(file, whiteSpace, newBlockFragment)) {
-                val previousNode = psiFactory.createBlock(deletedNodeText)
-                previousNode.lBrace?.delete()
-                previousNode.rBrace?.delete()
-                nodeToDelete.replaceChild(whiteSpace, previousNode)
-            }
+            text[changeLineNum] = trueGuardBlock
+            if (!checker.checkTextCompiling(getText(text)))
+                text[changeLineNum] = code
         }
+        file = psiFactory.createFile(getText(text))
     }
 
     fun trueGuardBlock(code : String, line : Int) : String {
