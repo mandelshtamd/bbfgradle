@@ -82,7 +82,7 @@ class SingleFileBugFinder(dir: String) : BugFinder(dir) {
 
             val checker = MutationChecker(compilers)
             //Now begin to trace mutated file
-            val tracer = Tracer(resultingMutant, psiCreator.ctx!!, checker)
+            val tracer = Tracer(checker, resultingMutant)
             val traced = tracer.trace()
             log.debug("Traced = ${traced.text}")
             if (!compilers.checkCompilingForAllBackends(traced)) {

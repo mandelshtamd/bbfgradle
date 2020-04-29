@@ -6,7 +6,7 @@ import java.io.File
 import java.util.*
 
 
-const val COMMAND = "./gradlew runBBF"
+const val COMMAND = "./gradlew runMetamorphicBBF"
 val TIMEOUT_SEC = Properties()
     .also { it.load(File("bbf.conf").inputStream()) }
     .getProperty("BBF_TIMEOUT")?.toLongOrNull() ?: throw IllegalArgumentException("Can't init timeout value")

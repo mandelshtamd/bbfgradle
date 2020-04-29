@@ -22,7 +22,7 @@ import com.stepanov.bbf.bugfinder.util.replaceThis
 import java.lang.StringBuilder
 
 //TODO delete getType fun
-class Tracer(private var tree: PsiFile, private val ctx: BindingContext, val checker: MutationChecker) : KtVisitorVoid() {
+class Tracer(private val checker: MutationChecker, originalTree: PsiFile) : KtVisitorVoid() {
 
     fun trace(): KtFile {
         //Handle all functions
@@ -222,6 +222,14 @@ class Tracer(private var tree: PsiFile, private val ctx: BindingContext, val che
         }
     }
 
-    private val factory: KtPsiFactory = KtPsiFactory(tree)
+    private val factory: KtPsiFactory = KtPsiFactory(originalTree)
+    private val ctx: BindingContext
+    private val tree: PsiFile
+
+    init {
+        val creator = PSICreator("")
+        tree = creator.getPSIForText(originalTree.text)
+        ctx = creator.ctx!!
+    }
 
 }

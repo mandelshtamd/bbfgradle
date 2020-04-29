@@ -13,6 +13,7 @@ class MutateArithmeticExpression : Transformation() {
     override fun transform() {
         val operators = file.node.getAllChildrenNodes()
             .filter { it.elementType == KtNodeTypes.INTEGER_CONSTANT }
+            .filter { !it.text.contains('L') }
         operators.forEach {
             val mutatedArithmExpr = doMutation(it.text.toInt())
             replaceArithmExpr(it, mutatedArithmExpr)

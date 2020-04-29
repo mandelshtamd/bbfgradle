@@ -1,19 +1,11 @@
 package com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations
 
-import com.intellij.psi.PsiWhiteSpace
-import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
-import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
-import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
-import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
-import com.stepanov.bbf.bugfinder.tracer.VariableValuesTracer
-import com.stepanov.bbf.bugfinder.util.getAllPSIDFSChildrenOfType
-import com.stepanov.bbf.reduktor.parser.PSICreator
-import com.stepanov.bbf.reduktor.util.getAllChildren
+import com.stepanov.bbf.bugfinder.metamorphicMutator.getWhiteSpaceNodesToLines
 import java.util.*
 
 class AddAlwaysTrueConditionalBlock : EquivalentMutation() {
     override fun transform() {
-        val nodes = file.getAllPSIDFSChildrenOfType<PsiWhiteSpace>().filter { it.text.contains("\n") }
+        val nodes = file.getWhiteSpaceNodesToLines()
         val maxNum = file.text.lines().size
 
         repeat(5) {

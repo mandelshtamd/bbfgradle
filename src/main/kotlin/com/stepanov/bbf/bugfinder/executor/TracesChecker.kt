@@ -1,13 +1,14 @@
 package com.stepanov.bbf.bugfinder.executor
 
 import com.intellij.psi.PsiErrorElement
+import com.intellij.psi.PsiFile
 import com.stepanov.bbf.bugfinder.executor.compilers.JCompiler
+import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.util.*
 import com.stepanov.bbf.reduktor.util.getAllChildrenNodes
 import org.apache.log4j.Logger
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.psiUtil.parents
@@ -15,7 +16,6 @@ import org.jetbrains.kotlin.resolve.ImportPath
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
-import java.lang.StringBuilder
 
 // Transformation is here only for PSIFactory
 class TracesChecker(private val compilers: List<CommonCompiler>) : CompilationChecker(compilers) {
@@ -51,7 +51,8 @@ class TracesChecker(private val compilers: List<CommonCompiler>) : CompilationCh
                         ?.any { it.name?.contains("box") == true } == true
                 ) addMain(it.first) else
                     it.first
-            }, null, LANGUAGE.KJAVA)
+            }, null, LANGUAGE.KJAVA
+        )
 
 
     private fun addMain(text: String): String =
@@ -124,6 +125,18 @@ class TracesChecker(private val compilers: List<CommonCompiler>) : CompilationCh
         }
     }
 
+    fun compareTracesOfFiles(files: List<PsiFile>): Map<CommonCompiler, List<PsiFile>> {
+        val res = mutableMapOf<CommonCompiler, List<PsiFile>>()
+        for (compiler in compilers) {
+            val r = files
+                .map { addMainWithBoxInvoke(it) }
+                .map { it to compileAndExec(compiler, it) }
+                .groupBy({ it.second }, { it.first })
+            if (r.size != 1) res[compiler] = r.values.map { it.first() }
+        }
+        return res
+    }
+
     fun checkTestForProject(commonPath: String): List<CommonCompiler>? {
         val results = mutableListOf<Pair<CommonCompiler, String>>()
         for (comp in compilers) {
@@ -142,6 +155,14 @@ class TracesChecker(private val compilers: List<CommonCompiler>) : CompilationCh
         } else {
             groupedRes.map { it.value.first() }
         }
+    }
+
+    private fun compileAndExec(compiler: CommonCompiler, file: PsiFile): String {
+        val tmpPath = Project(file.text).saveOrRemoveToTmp(true)
+        val compileStatus = compiler.compile(tmpPath)
+        if (compileStatus.status == -1) return ""
+        Project(file.text).saveOrRemoveToTmp(false)
+        return compiler.exec(compileStatus.pathToCompiled)
     }
 
     fun checkTest(text: String, pathToFile: String): List<CommonCompiler>? {
@@ -196,6 +217,17 @@ class TracesChecker(private val compilers: List<CommonCompiler>) : CompilationCh
             alreadyChecked[hash] = res
             res
         }
+    }
+
+    private fun addMainWithBoxInvoke(psiFile: PsiFile): PsiFile {
+        if (psiFile.text.contains("fun main(")) return psiFile.copy() as PsiFile
+        val factory = KtPsiFactory(psiFile.project)
+        val mainFun = """
+        fun main(args: Array<String>) {
+            println(box())
+        }
+    """.trimIndent()
+        return factory.createFile(psiFile.text + "\n" + mainFun)
     }
 
     var alreadyChecked: HashMap<Int, List<CommonCompiler>?> = HashMap()

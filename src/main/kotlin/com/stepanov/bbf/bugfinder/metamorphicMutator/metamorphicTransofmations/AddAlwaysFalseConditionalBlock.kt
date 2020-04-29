@@ -4,6 +4,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
 import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
+import com.stepanov.bbf.bugfinder.metamorphicMutator.getWhiteSpaceNodesToLines
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.tracer.VariableValuesTracer
 import com.stepanov.bbf.bugfinder.util.getAllPSIDFSChildrenOfType
@@ -12,7 +13,7 @@ import java.util.*
 
 class AddAlwaysFalseConditionalBlock : EquivalentMutation() {
     override fun transform() {
-        val nodes = file.getAllPSIDFSChildrenOfType<PsiWhiteSpace>().filter { it.text.contains("\n") }
+        val nodes = file.getWhiteSpaceNodesToLines()
         val maxNum = file.text.lines().size
 
         repeat(5) {

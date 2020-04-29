@@ -15,7 +15,8 @@ enum class BugType {
     FRONTEND,
     DIFFBEHAVIOR,
     UNKNOWN,
-    DIFFCOMPILE
+    DIFFCOMPILE,
+    METAMORPHIC
 }
 
 data class Bug(val compilers: List<CommonCompiler>, val msg: String, val crashedProject: Project, val type: BugType) {
@@ -39,7 +40,7 @@ data class Bug(val compilers: List<CommonCompiler>, val msg: String, val crashed
                 when (type) {
                     BugType.DIFFBEHAVIOR -> "diffBehavior"
                     BugType.DIFFCOMPILE -> "diffCompile"
-                    BugType.FRONTEND, BugType.BACKEND -> compilers.first().compilerInfo.filter { it != ' ' }
+                    BugType.FRONTEND, BugType.BACKEND, BugType.METAMORPHIC -> compilers.first().compilerInfo.filter { it != ' ' }
                     else -> ""
                 }
 
@@ -73,7 +74,8 @@ object BugManager {
     }
 
     fun checkIfBugIsProject(bug: Bug): Bug =
-        if (bug.crashedProject.texts.size > 1) {
+        if (bug.type != BugType.BACKEND && bug.type != BugType.FRONTEND) bug
+        else if (bug.crashedProject.texts.size > 1) {
             val checker = CompilationChecker(bug.compilers)
             val oneFileBugs = checker.isCompilerBug(bug.crashedProject.moveAllCodeInOneFile())
             if (oneFileBugs.isNotEmpty()) Bug(
@@ -95,7 +97,8 @@ object BugManager {
         //TODO Make for projects!!
         if (newBug.crashedProject.texts.size == 1 &&
             CompilerArgs.shouldFilterDuplicateCompilerBugs &&
-            haveDuplicates(reducedBug)) return
+            haveDuplicates(reducedBug)
+        ) return
         bugs.add(reducedBug)
         //Report bugs
         if (ReportProperties.getPropAsBoolean("TEXT_REPORTER") == true) {
