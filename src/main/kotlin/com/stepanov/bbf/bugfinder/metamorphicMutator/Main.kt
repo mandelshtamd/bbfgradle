@@ -2,32 +2,19 @@ package com.stepanov.bbf.bugfinder.metamorphicMutator
 
 import com.stepanov.bbf.bugfinder.executor.Project
 import com.stepanov.bbf.bugfinder.executor.TracesChecker
-import com.stepanov.bbf.bugfinder.executor.compilers.JSCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.JVMCompiler
 import com.stepanov.bbf.bugfinder.executor.compilers.MutationChecker
-import com.stepanov.bbf.bugfinder.executor.debugger.RuntimeVariableValuesCollector
 import com.stepanov.bbf.bugfinder.manager.Bug
 import com.stepanov.bbf.bugfinder.manager.BugManager
 import com.stepanov.bbf.bugfinder.manager.BugType
-import com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations.SynthesizePredicate
-import com.stepanov.bbf.bugfinder.metamorphicMutator.metamorphicTransofmations.SynthesizeValidExpression
 import com.stepanov.bbf.bugfinder.mutator.transformations.Factory
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation.Companion.checker
 import com.stepanov.bbf.bugfinder.tracer.Tracer
-import com.stepanov.bbf.bugfinder.tracer.VariableValuesTracer
-import com.stepanov.bbf.bugfinder.util.BBFProperties
-import com.stepanov.bbf.bugfinder.util.getFirstParentOfType
 import com.stepanov.bbf.bugfinder.util.getRandomVariableName
 import com.stepanov.bbf.reduktor.parser.PSICreator
-import com.stepanov.bbf.reduktor.util.getAllChildren
-import com.stepanov.bbf.reduktor.util.getAllDFSChildren
 import org.apache.log4j.PropertyConfigurator
-import org.jetbrains.kotlin.psi.KtBlockExpression
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunction
 import java.io.File
-import java.lang.StringBuilder
 import java.util.*
 
 
