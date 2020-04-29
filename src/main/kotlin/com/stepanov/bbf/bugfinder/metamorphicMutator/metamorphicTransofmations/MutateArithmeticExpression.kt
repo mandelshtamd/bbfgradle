@@ -4,54 +4,38 @@ import com.intellij.lang.ASTNode
 import com.stepanov.bbf.bugfinder.mutator.transformations.Transformation
 import com.stepanov.bbf.bugfinder.util.getAllChildrenNodes
 import org.jetbrains.kotlin.KtNodeTypes
+import ru.spbstu.wheels.asBits
 import kotlin.math.abs
 import kotlin.random.Random
 
 class MutateArithmeticExpression : Transformation() {
-    val mutationsCount = 7
+    val mutationsCount = 3
 
     override fun transform() {
         val operators = file.node.getAllChildrenNodes()
             .filter { it.elementType == KtNodeTypes.INTEGER_CONSTANT }
-            .filter { !it.text.contains('L') }
+
         operators.forEach {
+            if (it.text.last() == 'L')
+                return@forEach
+
             val mutatedArithmExpr = doMutation(it.text.toInt())
             replaceArithmExpr(it, mutatedArithmExpr)
         }
     }
 
     private fun doMutation(source: Int): String {
-        var newArithmExpr = ""
-        newArithmExpr = when (Random.nextInt() % mutationsCount) {
-            0 -> breakdownIntoTerms(source)
-//            1 -> "($source or ($source % 2))"
-//            2 -> "($source and 0.inv())"
-//            3 -> "(($source shl 1) shr 1)"
-//            4 -> "($source shl 0)"
-//            5 -> "($source + ($source.inv() and $source))"
-            else -> generatePrevaluatedExpression(source, Random.nextInt(5))
-        }
-        return newArithmExpr
+        return generatePrevaluatedExpression(source, Random.nextInt(5))
     }
 
-    private fun breakdownIntoTerms(source: Int) : String {
-        val leftOp = Random.nextInt() % 100000
-        var rightOp = 0
-        if (source - leftOp < Int.MIN_VALUE) { 
-            rightOp = source + leftOp 
-            return "(-$leftOp + $rightOp)"
-        } else { 
-            rightOp = source - leftOp 
-            return "($leftOp + $rightOp)"
-        }
-    }
 
     private fun replaceArithmExpr(replace: ASTNode, replacement: String) {
         val replacementNode = psiFactory.createArgument(replacement)
         checker.replacePSINodeIfPossible(file, replace.psi, replacementNode)
     }
 
-    private fun generatePrevaluatedExpression(number : Int, termsCount : Int) : String {
+
+    fun generatePrevaluatedExpression(number : Int, termsCount : Int) : String {
         if (number == 0)
             return 0.toString()
 
@@ -84,9 +68,59 @@ class MutateArithmeticExpression : Transformation() {
                 currentNumber = number / nextValue
                 operation = "*"
             }
+            4 -> {
+                nextValue = getNextNumberOrOperation(number) ?: number
+                currentNumber = number or nextValue
+                operation = "or"
+            }
+            5 -> {
+                nextValue = getNextNumberAndOperation(number) ?: number
+                currentNumber = number and nextValue
+                operation = "and"
+            }
         }
-
         return "($currentNumber $operation ${generatePrevaluatedExpression(nextValue, termsCount - 1)})"
+    }
+
+
+    fun getNextNumberOrOperation(number : Int) : Int? {
+        val bitArray = Integer.toBinaryString(number)
+        var nextNumber = mutableListOf<Char>()
+
+        for (i in 0 until bitArray.length) {
+            if (bitArray[i] == '1')
+                nextNumber.add(listOf<Char>('0', '1').random())
+            else
+                nextNumber.add('0')
+        }
+        println(bitArray)
+        println(nextNumber)
+        return getIntFromList(nextNumber)
+    }
+
+
+    fun getNextNumberAndOperation(number : Int) : Int? {
+        val bitArray = Integer.toBinaryString(number)
+        var nextNumber = mutableListOf<Char>()
+
+        for (i in 0 until bitArray.length) {
+            if (bitArray[i] == '1')
+                nextNumber.add(bitArray[i])
+            else
+                nextNumber.add(listOf<Char>('0', '1').random())
+        }
+        return getIntFromList(nextNumber)
+    }
+
+
+    fun getIntFromList(list : List<Char>) : Int {
+        var temp = 1
+        var result = 0
+        for (i in list.size-1 downTo  0) {
+            result += temp * (list[i] - '0')
+            temp *= 2
+        }
+        return result
     }
 
 
